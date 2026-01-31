@@ -37,6 +37,9 @@ Immunoglobulin-like domains are well known for their role in protein–protein i
 
 
 
+
+
+
 Biological Interpretation
 
 Biological interpretation was performed by integrating sequence quality analysis, ORF prediction, homology search, and conserved domain annotation.
@@ -52,6 +55,9 @@ Biofilm formation
 Host–pathogen interactions
 
 The high degree of sequence conservation observed across Escherichia coli strains indicates that this protein likely performs an important and conserved biological function. Based on the combined computational evidence, the analyzed gene is predicted to encode a surface-associated adhesin involved in bacterial attachment and interaction processes.
+
+
+
 
 
 Conclusion
