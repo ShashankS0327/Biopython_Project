@@ -1,181 +1,59 @@
 # Biopython_Project
 In-silico Analysis and Functional Prediction of an Unknown DNA-Encoded Protein from Escherichia col
 
-Original file is located at
-    https://colab.research.google.com/drive/1kIXfwEsFQyau6kobXhuXz6lLKQ3-_1xa
+Functional Annotation
 
-##Install Biopython
-"""
+Functional annotation was performed to predict the biological role of the selected open reading frame (ORF) identified from a bacterial genome. The longest ORF (2387 amino acids) was subjected to homology-based and domain-based annotation using established bioinformatics tools.
 
-pip install biopython
+ Homology-Based Annotation (BLASTp)
 
-"""##Import the necesarry packages"""
+Tool used: NCBI BLASTp (nr database)
 
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqUtils import gc_fraction
+Top hit: Putative adhesin
 
-"""##Read the Fasta file"""
+Organism: Escherichia coli
 
-record = SeqIO.read("sequence.fasta","fasta")
-dna_seq = record.seq.upper()
-print(f"Sequence_ID : {record.id}")
-print(f"Sequence_length : {len(dna_seq)}bp")
+Sequence identity: ~99.6%
 
-"""##Quality analysis of Unknown Sequence
+E-value: 0.0
 
-GC Content
-"""
+The extremely low E-value and high sequence identity indicate strong evolutionary conservation and suggest that the predicted ORF encodes a protein with a function similar to known bacterial adhesins.
 
-gc_cont = gc_fraction(dna_seq)*100
-print(f"GC_Content : {gc_cont:.2f}%")
+ Conserved Domain Analysis (InterProScan)
 
-"""Checking DNA validation"""
+InterProScan analysis identified multiple conserved immunoglobulin-like (Ig-like) domains throughout the protein sequence.
 
-valid_bases = set("ATGCN")
-invalid_bases = set(dna_seq) - valid_bases
-print(f"Total invalid bases : {invalid_bases}")
+InterPro ID: IPR013783
 
-"""Scientific interpretation:
+Domain name: Immunoglobulin-like fold
 
-“The DNA sequence is very large (~4.6 Mb), GC-balanced, and contains no invalid nucleotide characters, indicating a high-quality genomic DNA sequence suitable for downstream gene prediction analysis.”
+Database source: Gene3D
 
-##ORF
-"""
+Domain distribution: Multiple repeated regions across the protein length
 
-from Bio.Seq import Seq
+Statistical significance: E-values ranging from 10⁻¹³ to 10⁻¹⁸
 
-seq = dna_seq
-cleaned_seq_str = "".join([base if base in "ATGCN" else "N" for base in str(seq)])
-cleaned_seq = Seq(cleaned_seq_str)
+Immunoglobulin-like domains are well known for their role in protein–protein interactions and are commonly found in bacterial surface and adhesion proteins.
 
-translated_frames = []
 
-for strand, nuc in [("+", cleaned_seq), ("-", cleaned_seq.reverse_complement())]:
-    for frame in range(3):
-        protein = nuc[frame:].translate()
-        translated_frames.append((strand, frame, protein))
 
-"""##selecting the ORF with minimum aa length 300"""
+Biological Interpretation
 
-orfs = []
-min_aa_length = 300
+Biological interpretation was performed by integrating sequence quality analysis, ORF prediction, homology search, and conserved domain annotation.
 
-for strand, frame, protein in translated_frames:
-    for orf in protein.split("*"):
-        if len(orf) >= min_aa_length:
-            orfs.append((strand, frame, len(orf), orf))
+The predicted protein is unusually large and contains multiple immunoglobulin-like domains, suggesting a modular architecture optimized for surface interaction. Such features are characteristic of bacterial adhesins, which mediate attachment to host tissues or abiotic surfaces.
 
-print("Number of ORFs after filtering:", len(orfs))
+Adhesins play a crucial role in:
 
-orfs_sorted = sorted(orfs, key=lambda x: x[2], reverse=True)
+Bacterial colonization
 
-for i, orf in enumerate(orfs_sorted[:5], start=1):
-    print(f"ORF {i}: Length = {orf[2]} aa | Strand = {orf[0]} | Frame = {orf[1]}")
+Biofilm formation
 
-"""##Filtering the Longest ORF"""
+Host–pathogen interactions
 
-from Bio.Seq import Seq
+The high degree of sequence conservation observed across Escherichia coli strains indicates that this protein likely performs an important and conserved biological function. Based on the combined computational evidence, the analyzed gene is predicted to encode a surface-associated adhesin involved in bacterial attachment and interaction processes.
 
 
-orfs = []
-min_aa_length = 300
+Conclusion
 
-
-for strand, frame, protein in translated_frames:
-    for orf in protein.split("*"):
-        if len(orf) >= min_aa_length:
-            orfs.append((strand, frame, len(orf), orf))
-
-
-if orfs:
-    longest_orf = max(orfs, key=lambda x: x[2])
-
-    strand, frame, aa_length, protein_seq = longest_orf
-
-    print("Longest ORF details:")
-    print("Protein length (aa):".ljust(20), aa_length)
-    print("Strand:".ljust(20), strand)
-    print("Frame:".ljust(20), frame)
-else:
-    print(f"No ORFs found with a minimum amino acid length of {min_aa_length} in any frame.")
-    protein_seq = Seq("")
-
-print(protein_seq)
-
-"""“Since the input sequence represents a complete bacterial genome, sequence filtering was performed using ORF prediction. The genome was translated in all six reading frames using Biopython, and ORFs shorter than 300 amino acids were excluded. Among the remaining candidates, the longest ORF (2387 amino acids) encoded on the forward strand was selected for downstream analysis.”
-
-##Converting the longest orf seq into a fastafile
-"""
-
-from Bio.SeqRecord import SeqRecord
-from Bio import SeqIO
-
-orf_record = SeqRecord(
-    protein_seq,
-    id="Longest_ORF_2387aa",
-    description="Predicted protein from ORF filtering (Strand +, Frame 0)"
-)
-
-SeqIO.write(orf_record, "orf_protein.fasta", "fasta")
-
-print("ORF protein saved as orf_protein.fasta")
-
-"""“Following ORF-based sequence filtering, the longest predicted ORF (2387 amino acids) was extracted and saved as a protein FASTA file for downstream homology-based comparison.”
-
-#SEQUENCE COMPARISON (HOMOLOGY SEARCH)
-
-PURPOSE OF THIS STEP (VERY IMPORTANT)
-
-To identify whether the selected ORF is similar to any known genes/proteins and to infer its possible function based on evolutionary conservation.
-
-This step answers:
-
-“What is this gene similar to?”
-
-“Does it already exist in other organisms?”
-"""
-
-from Bio.Blast import NCBIWWW
-from Bio import SeqIO
-
-record = SeqIO.read("orf_protein.fasta", "fasta")
-
-result_handle = NCBIWWW.qblast(
-    program="blastp",
-    database="nr",
-    sequence=record.seq
-)
-
-with open("blast_result.xml", "w") as out_handle:
-    out_handle.write(result_handle.read())
-
-print("BLAST results saved as blast_result.xml")
-
-from Bio.Blast import NCBIXML
-
-with open("blast_result.xml") as result_handle:
-    blast_record = NCBIXML.read(result_handle)
-
-top_alignment = blast_record.alignments[0]
-top_hsp = top_alignment.hsps[0]
-
-print("Top hit:", top_alignment.hit_def)
-print("E-value:", top_hsp.expect)
-print("Identity:", top_hsp.identities)
-
-"""“Homology-based similarity analysis was performed using BLASTp against the NCBI non-redundant protein database. The selected ORF showed a highly significant match (E-value = 0.0) to a putative adhesin protein from Escherichia coli, with near-complete sequence identity, indicating strong evolutionary conservation.”
-
-##Converting interpro_results.tsv file into dataframe
-"""
-
-import pandas as pd
-
-interpro_df = pd.read_csv("interpro_results.tsv", sep="\t")
-
-interpro_df.head()
-
-"""“InterProScan analysis identified multiple conserved immunoglobulin-like domains (IPR013783) distributed throughout the protein sequence. These domains are characteristic of bacterial adhesins and are involved in protein–protein and cell–surface interactions. The presence of repeated Ig-like folds strongly supports the functional annotation of the protein as an adhesin.”
-
-“The detection of multiple Ig-like domains suggests a modular architecture, which is typical of large surface-exposed bacterial adhesion proteins.”
-"""
+This study demonstrates how an unknown DNA sequence can be functionally characterized using a systematic bioinformatics pipeline. Through ORF prediction, homology-based similarity analysis, and conserved domain identification, the target gene was successfully annotated as a putative bacterial adhesin. The repository provides a reproducible framework for computational functional prediction of uncharacterized genes.
